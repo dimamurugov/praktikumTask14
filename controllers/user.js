@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 require('dotenv').config();
 
+const JWT_SECRET = '6a672188c7e3304165e9acafd99f3e89caa47c5bf4636dcb5b1e8aa79478a63e';
 module.exports.getUsers = (req, res) => {
   User.find({})
     .then((users) => res.send({ data: users }))
@@ -11,7 +12,7 @@ module.exports.getUsers = (req, res) => {
 
 module.exports.login = (req, res) => {
   const { email, password } = req.body;
-  const { NODE_ENV, JWT_SECRET } = process.env;
+  const { NODE_ENV } = process.env;
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
