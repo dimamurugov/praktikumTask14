@@ -60,6 +60,9 @@ module.exports.createUser = (req, res) => {
       if (err.name === 'ValidationError') {
         return res.status(400).send({ message: 'Переданы некорректные данные' });
       }
+      if (err.name === 'MongoError') {
+        return res.status(409).send({ message: 'Такой пользователь уже существует' });
+      }
 
       return res.status(500).send({ message: 'произошла ошибка на сервере' });
     });
