@@ -40,7 +40,14 @@ module.exports.createUser = (req, res) => {
     password,
   } = req.body;
 
+
   bcrypt.hash(password, 10)
+    .then((hash) => {
+      if (password.length < 8) {
+        return Promise.reject(new Error('smallpassword'));
+      }
+      return hash
+    })
     .then((hash) => User.create({
       name,
       about,
@@ -63,6 +70,9 @@ module.exports.createUser = (req, res) => {
       }
       if (err.name === 'MongoError') {
         return res.status(409).send({ message: 'Такой пользователь уже существует' });
+      }
+      if (err.name === 'Error') {
+        return res.status(400).send({ message: 'Пароль должен быть миниму 8 символов' });
       }
 
       return res.status(500).send({ message: 'произошла ошибка на сервере' });

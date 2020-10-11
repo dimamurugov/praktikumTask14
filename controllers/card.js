@@ -40,7 +40,7 @@ module.exports.deleteCard = (req, res) => {
   Card.findById(req.params.id)
     .then((card) => {
       if (card.owner._id.toString() !== req.user._id) {
-        return Promise.reject(new Error('Нет прав для обработки'));
+        return Promise.reject(new Error('notPrav'));
       }
 
       return Card.findByIdAndRemove(req.params.id)
@@ -57,8 +57,11 @@ module.exports.deleteCard = (req, res) => {
           return res.status(500).send({ message: 'на сервере произошла ошибка' });
         });
     })
-    .catch(() => {
-      res.status(404).send({ message: 'Нет прав для доступа' });
+    .catch((err) => {
+      if (err.name === 'Error') {
+        res.status(403).send({ message: 'Нет прав доступа' });
+      }
+
     });
 };
 
