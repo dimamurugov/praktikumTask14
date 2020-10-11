@@ -8,10 +8,14 @@ module.exports.getCards = (req, res) => {
 
 module.exports.getCard = (req, res) => {
   Card.findById(req.params.id)
-    .orFail(() => new Error('notValidId'))
+    .orFail(() => {
+      const error = new Error();
+      error.name = 'notValidId';
+      return Promise.reject(error);
+    })
     .then((card) => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'Error') {
+      if (err.name === 'notValidId') {
         return res.status(404).send({ message: 'Не найдена карточки с таким id' });
       }
       if (err.name === 'CastError') {
@@ -40,14 +44,20 @@ module.exports.deleteCard = (req, res) => {
   Card.findById(req.params.id)
     .then((card) => {
       if (card.owner._id.toString() !== req.user._id) {
-        return Promise.reject(new Error('notPrav'));
+        const error = new Error();
+        error.name = 'notRules';
+        return Promise.reject(error);
       }
 
       return Card.findByIdAndRemove(req.params.id)
-        .orFail(() => new Error('notValidId'))
+        .orFail(() => {
+          const error = new Error();
+          error.name = 'notValidId';
+          return Promise.reject(error);
+        })
         .then((dataCard) => res.send({ data: dataCard }))
         .catch((err) => {
-          if (err.name === 'Error') {
+          if (err.name === 'notValidId') {
             return res.status(404).send({ message: 'не найдена карточка с таким id' });
           }
           if (err.name === 'CastError') {
@@ -58,10 +68,9 @@ module.exports.deleteCard = (req, res) => {
         });
     })
     .catch((err) => {
-      if (err.name === 'Error') {
+      if (err.name === 'notRules') {
         res.status(403).send({ message: 'Нет прав доступа' });
       }
-
     });
 };
 
@@ -71,10 +80,14 @@ module.exports.addLike = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .orFail(() => new Error('notValidId'))
+    .orFail(() => {
+      const error = new Error();
+      error.name = 'notValidId';
+      return Promise.reject(error);
+    })
     .then((card) => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'Error') {
+      if (err.name === 'notValidId') {
         return res.status(404).send({ message: 'не найдена карточка с таким id' });
       }
       if (err.name === 'CastError') {
@@ -91,10 +104,14 @@ module.exports.deleteLike = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
-    .orFail(() => new Error('notValidId'))
+    .orFail(() => {
+      const error = new Error();
+      error.name = 'notValidId';
+      return Promise.reject(error);
+    })
     .then((card) => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'Error') {
+      if (err.name === 'notValidId') {
         return res.status(404).send({ message: 'не найдена карточка с таким id' });
       }
       if (err.name === 'CastError') {

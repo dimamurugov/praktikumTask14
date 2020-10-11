@@ -22,7 +22,7 @@ module.exports.login = (req, res) => {
         maxAge: 3600000,
         httpOnly: true,
         sameSite: true,
-      })
+      });
       res.status(200).send({ message: 'Авторизация прошла успешно!' })
         .end();
     })
@@ -40,13 +40,14 @@ module.exports.createUser = (req, res) => {
     password,
   } = req.body;
 
-
   bcrypt.hash(password, 10)
     .then((hash) => {
       if (password.length < 8) {
-        return Promise.reject(new Error('smallpassword'));
+        const error = new Error();
+        error.name = 'smallPassword';
+        return Promise.reject(error);
       }
-      return hash
+      return hash;
     })
     .then((hash) => User.create({
       name,
@@ -61,8 +62,8 @@ module.exports.createUser = (req, res) => {
         name: user.name,
         about: user.about,
         avatar: user.avatar,
-        email: user.email
-      }
+        email: user.email,
+      },
     }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -71,7 +72,7 @@ module.exports.createUser = (req, res) => {
       if (err.name === 'MongoError') {
         return res.status(409).send({ message: 'Такой пользователь уже существует' });
       }
-      if (err.name === 'Error') {
+      if (err.name === 'smallPassword') {
         return res.status(400).send({ message: 'Пароль должен быть миниму 8 символов' });
       }
 
@@ -81,10 +82,14 @@ module.exports.createUser = (req, res) => {
 
 module.exports.getUser = (req, res) => {
   User.findById(req.params.id)
-    .orFail(() => new Error('notValidId'))
+    .orFail(() => {
+      const error = new Error();
+      error.name = 'notValidId';
+      return Promise.reject(error);
+    })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'Error') {
+      if (err.name === 'notValidId') {
         return res.status(404).send({ message: 'не найден пользователь с таким id' });
       }
       if (err.name === 'CastError') {
