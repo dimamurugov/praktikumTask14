@@ -42,7 +42,9 @@ module.exports.createUser = (req, res) => {
 
   bcrypt.hash(password, 10)
     .then((hash) => {
-      if (password.length < 8) {
+      const regex = /\w.{7,}/i;
+
+      if (!regex.test(password)) {
         const error = new Error();
         error.name = 'smallPassword';
         return Promise.reject(error);
