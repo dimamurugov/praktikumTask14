@@ -1,7 +1,7 @@
 {
   "extends": "airbnb-base",
+  "consistent-return": ["error", { "treatUndefinedAsUnspecified": true }],
   "rules": {
-    "no-underscore-dangle": ["error", { "allow": ["_id"] }],
-    "consistent-return": ["error", { "treatUndefinedAsUnspecified": true }]
+    "no-underscore-dangle": ["error", { "allow": ["_id"] }]
   }
 }
