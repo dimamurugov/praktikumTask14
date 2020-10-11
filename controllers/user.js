@@ -120,7 +120,7 @@ module.exports.updatetUser = (req, res) => {
         return res.status(400).send({ message: 'Переданы некорректные данные' });
       }
       if (err.name === 'nullUser') {
-        return res.status(400).send({ message: 'нет такого пользователя' });
+        return res.status(404).send({ message: 'нет такого пользователя' });
       }
       return res.status(500).send({ message: 'На сервере произошла ошибка' });
     });

@@ -58,7 +58,7 @@ module.exports.deleteCard = (req, res) => {
         .then((dataCard) => res.send({ data: dataCard }))
         .catch((err) => {
           if (err.name === 'notValidId') {
-            return res.status(404).send({ message: 'не найдена карточка с таким id' });
+            return res.status(403).send({ message: 'не найдена карточка с таким id' });
           }
           if (err.name === 'CastError') {
             return res.status(400).send({ message: 'не валидный id' });
