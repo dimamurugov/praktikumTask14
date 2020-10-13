@@ -41,11 +41,10 @@ module.exports.createUser = (req, res) => {
     password,
   } = req.body;
 
-  bcrypt.hash(password, 10)
+  bcrypt.hash(password || '', 10)
     .then((hash) => {
       const regex = /\w.{7,}/i;
-
-      if (!regex.test(password)) {
+      if (!regex.test(password) || password === undefined) {
         const error = new Error();
         error.name = 'smallPassword';
         return Promise.reject(error);
@@ -79,7 +78,7 @@ module.exports.createUser = (req, res) => {
         return res.status(400).send({ message: 'Пароль должен быть миниму 8 символов' });
       }
 
-      return res.status(500).send({ message: 'произошла ошибка на сервере' });
+      return res.status(500).send({ message: err.name });
     });
 };
 
