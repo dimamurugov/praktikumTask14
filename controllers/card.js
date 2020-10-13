@@ -60,17 +60,20 @@ module.exports.deleteCard = (req, res) => {
           if (err.name === 'notValidId') {
             return res.status(403).send({ message: 'не найдена карточка с таким id' });
           }
-          if (err.name === 'CastError') {
-            return res.status(400).send({ message: 'не валидный id' });
-          }
-
           return res.status(500).send({ message: 'на сервере произошла ошибка' });
         });
     })
     .catch((err) => {
       if (err.name === 'notRules') {
-        res.status(403).send({ message: 'Нет прав доступа' });
+        return res.status(403).send({ message: 'Нет прав доступа' });
       }
+      if (err.name === 'CastError') {
+        return res.status(404).send({ message: 'Не валидный id карты' });
+      }
+      if (err.name === 'TypeError') {
+        return res.status(404).send({ message: 'Нет карты с тким id' });
+      }
+      return res.status(500).send({ message: 'на сервере произошла ошибка' });
     });
 };
 
