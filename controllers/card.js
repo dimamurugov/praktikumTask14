@@ -58,7 +58,7 @@ module.exports.deleteCard = (req, res) => {
         .then((dataCard) => res.send({ data: dataCard }))
         .catch((err) => {
           if (err.name === 'notValidId') {
-            return res.status(403).send({ message: 'не найдена карточка с таким id' });
+            return res.status(404).send({ message: 'не найдена карточка с таким id' });
           }
           return res.status(500).send({ message: 'на сервере произошла ошибка' });
         });
@@ -68,7 +68,7 @@ module.exports.deleteCard = (req, res) => {
         return res.status(403).send({ message: 'Нет прав доступа' });
       }
       if (err.name === 'CastError') {
-        return res.status(404).send({ message: 'Не валидный id карты' });
+        return res.status(400).send({ message: 'Не валидный id карты' });
       }
       if (err.name === 'TypeError') {
         return res.status(404).send({ message: 'Нет карты с тким id' });
