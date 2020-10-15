@@ -84,12 +84,14 @@ module.exports.createUser = (req, res) => {
 
 module.exports.getUser = (req, res) => {
   User.findById(req.params.id)
-    .orFail(() => {
-      const error = new Error();
-      error.name = 'notValidId';
-      return Promise.reject(error);
+    .then((user) => {
+      if (user === null) {
+        const error = new Error();
+        error.name = 'notValidId';
+        return Promise.reject(error);
+      }
+      res.send({ data: user });
     })
-    .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'notValidId') {
         return res.status(404).send({ message: 'не найден пользователь с таким id' });
@@ -98,7 +100,7 @@ module.exports.getUser = (req, res) => {
         return res.status(400).send({ message: 'не валидный id' });
       }
 
-      return res.status(500).send({ message: 'На сервера произошла ошибка' });
+      return res.status(500).send({ message: err });
     });
 };
 

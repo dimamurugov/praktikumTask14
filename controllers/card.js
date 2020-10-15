@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 const Card = require('../models/card');
 
 module.exports.getCards = (req, res) => {
@@ -8,12 +9,14 @@ module.exports.getCards = (req, res) => {
 
 module.exports.getCard = (req, res) => {
   Card.findById(req.params.id)
-    .orFail(() => {
-      const error = new Error();
-      error.name = 'notValidId';
-      return Promise.reject(error);
+    .then((card) => {
+      if (card === null) {
+        const error = new Error();
+        error.name = 'notValidId';
+        return Promise.reject(error);
+      }
+      res.send({ data: card });
     })
-    .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'notValidId') {
         return res.status(404).send({ message: 'Не найдена карточки с таким id' });
@@ -22,7 +25,7 @@ module.exports.getCard = (req, res) => {
         return res.status(400).send({ message: 'Не валидные id' });
       }
 
-      return res.status(500).send({ message: 'На сервере произошла ошибка' });
+      return res.status(500).send({ message: err });
     });
 };
 
@@ -50,18 +53,8 @@ module.exports.deleteCard = (req, res) => {
       }
 
       return Card.findByIdAndRemove(req.params.id)
-        .orFail(() => {
-          const error = new Error();
-          error.name = 'notValidId';
-          return Promise.reject(error);
-        })
         .then((dataCard) => res.send({ data: dataCard }))
-        .catch((err) => {
-          if (err.name === 'notValidId') {
-            return res.status(404).send({ message: 'не найдена карточка с таким id' });
-          }
-          return res.status(500).send({ message: 'на сервере произошла ошибка' });
-        });
+        .catch(() => res.status(500).send({ message: 'на сервере произошла ошибка' }));
     })
     .catch((err) => {
       if (err.name === 'notRules') {
@@ -71,7 +64,7 @@ module.exports.deleteCard = (req, res) => {
         return res.status(400).send({ message: 'Не валидный id карты' });
       }
       if (err.name === 'TypeError') {
-        return res.status(404).send({ message: 'Нет карты с тким id' });
+        return res.status(404).send({ message: 'Нет карты с таким id' });
       }
       return res.status(500).send({ message: 'на сервере произошла ошибка' });
     });
@@ -83,12 +76,14 @@ module.exports.addLike = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .orFail(() => {
-      const error = new Error();
-      error.name = 'notValidId';
-      return Promise.reject(error);
+    .then((card) => {
+      if (card === null) {
+        const error = new Error();
+        error.name = 'notValidId';
+        return Promise.reject(error);
+      }
+      res.send({ data: card });
     })
-    .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'notValidId') {
         return res.status(404).send({ message: 'не найдена карточка с таким id' });
@@ -112,7 +107,14 @@ module.exports.deleteLike = (req, res) => {
       error.name = 'notValidId';
       return Promise.reject(error);
     })
-    .then((card) => res.send({ data: card }))
+    .then((card) => {
+      if (card === null) {
+        const error = new Error();
+        error.name = 'notValidId';
+        return Promise.reject(error);
+      }
+      res.send({ data: card });
+    })
     .catch((err) => {
       if (err.name === 'notValidId') {
         return res.status(404).send({ message: 'не найдена карточка с таким id' });
