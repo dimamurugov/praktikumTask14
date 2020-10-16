@@ -84,23 +84,17 @@ module.exports.createUser = (req, res) => {
 
 module.exports.getUser = (req, res) => {
   User.findById(req.params.id)
-    .then((user) => {
-      if (user === null) {
-        const error = new Error();
-        error.name = 'notValidId';
-        return Promise.reject(error);
-      }
-      res.send({ data: user });
-    })
+    .orFail(new Error('nullId'))
+    .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'notValidId') {
+      if (err.message === 'nullId') {
         return res.status(404).send({ message: 'не найден пользователь с таким id' });
       }
       if (err.name === 'CastError') {
         return res.status(400).send({ message: 'не валидный id' });
       }
 
-      return res.status(500).send({ message: err });
+      return res.status(500).send({ message: 'На сервере произошла ошибка' });
     });
 };
 
@@ -108,19 +102,13 @@ module.exports.updatetUser = (req, res) => {
   const { name, about } = req.body;
 
   User.findByIdAndUpdate(req.user._id, { name, about })
-    .then((user) => {
-      if (user === null) {
-        const error = new Error();
-        error.name = 'nullUser';
-        return Promise.reject(error);
-      }
-      res.send({ data: user });
-    })
+    .orFail(new Error('nullId'))
+    .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return res.status(400).send({ message: 'Переданы некорректные данные' });
       }
-      if (err.name === 'nullUser') {
+      if (err.message === 'nullId') {
         return res.status(404).send({ message: 'нет такого пользователя' });
       }
       return res.status(500).send({ message: 'На сервере произошла ошибка' });
@@ -131,19 +119,13 @@ module.exports.updatetAvatar = (req, res) => {
   const { avatar } = req.body;
 
   User.findByIdAndUpdate(req.user._id, { avatar })
-    .then((user) => {
-      if (user === null) {
-        const error = new Error();
-        error.name = 'nullUser';
-        return Promise.reject(error);
-      }
-      res.send({ data: user });
-    })
+    .orFail(new Error('nullId'))
+    .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return res.status(400).send({ message: 'Переданы некорректные данные' });
       }
-      if (err.name === 'nullUser') {
+      if (err.message === 'nullId') {
         return res.status(404).send({ message: 'Нет такого пользователя' });
       }
       return res.status(500).send({ message: 'На сервере произошла ошибка' });

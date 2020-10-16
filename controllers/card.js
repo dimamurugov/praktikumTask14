@@ -9,16 +9,10 @@ module.exports.getCards = (req, res) => {
 
 module.exports.getCard = (req, res) => {
   Card.findById(req.params.id)
-    .then((card) => {
-      if (card === null) {
-        const error = new Error();
-        error.name = 'notValidId';
-        return Promise.reject(error);
-      }
-      res.send({ data: card });
-    })
+    .orFail(new Error('nullId'))
+    .then((card) => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'notValidId') {
+      if (err.message === 'nullId') {
         return res.status(404).send({ message: 'Не найдена карточки с таким id' });
       }
       if (err.name === 'CastError') {
@@ -76,16 +70,10 @@ module.exports.addLike = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => {
-      if (card === null) {
-        const error = new Error();
-        error.name = 'notValidId';
-        return Promise.reject(error);
-      }
-      res.send({ data: card });
-    })
+    .orFail(new Error('nullId'))
+    .then((card) => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'notValidId') {
+      if (err.message === 'nullId') {
         return res.status(404).send({ message: 'не найдена карточка с таким id' });
       }
       if (err.name === 'CastError') {
@@ -102,21 +90,10 @@ module.exports.deleteLike = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
-    .orFail(() => {
-      const error = new Error();
-      error.name = 'notValidId';
-      return Promise.reject(error);
-    })
-    .then((card) => {
-      if (card === null) {
-        const error = new Error();
-        error.name = 'notValidId';
-        return Promise.reject(error);
-      }
-      res.send({ data: card });
-    })
+    .orFail(new Error('nullId'))
+    .then((card) => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'notValidId') {
+      if (err.message === 'nullId') {
         return res.status(404).send({ message: 'не найдена карточка с таким id' });
       }
       if (err.name === 'CastError') {
