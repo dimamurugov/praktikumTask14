@@ -3,15 +3,19 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 require('dotenv').config();
+const NotFoundError = require('../errors/not-found-err');
+const NotLoginError = require('../errors/not-login-err');
+const NotRequestError = require('../errors/not-request-err');
+const ConflictError = require('../errors/conflict-err');
 
 const JWT_SECRET = '6a672188c7e3304165e9acafd99f3e89caa47c5bf4636dcb5b1e8aa79478a63e';
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch(() => res.status(500).send({ message: 'На сервере произошла ошибка' }));
+    .catch(next);
 };
 
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
   const { NODE_ENV } = process.env;
 
@@ -28,11 +32,12 @@ module.exports.login = (req, res) => {
         .end();
     })
     .catch(() => {
-      res.status(401).send({ message: 'Неправильные почта или пароль' });
-    });
+      throw new NotLoginError('Неправильные почта или пароль');
+    })
+    .catch(next);
 };
 
-module.exports.createUser = (req, res) => {
+module.exports.createUser = (req, res, next) => {
   const {
     name,
     about,
@@ -45,9 +50,7 @@ module.exports.createUser = (req, res) => {
     .then((hash) => {
       const regex = /\w.{7,}/i;
       if (!regex.test(password) || password === undefined) {
-        const error = new Error();
-        error.name = 'smallPassword';
-        return Promise.reject(error);
+        throw new NotRequestError('Пароль должен быть миниму 8 символов');
       }
       return hash;
     })
@@ -69,65 +72,67 @@ module.exports.createUser = (req, res) => {
     }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(400).send({ message: 'Переданы некорректные данные' });
+        throw new NotRequestError('Пароль должен быть миниму 8 символов');
       }
       if (err.name === 'MongoError') {
-        return res.status(409).send({ message: 'Такой пользователь уже существует' });
-      }
-      if (err.name === 'smallPassword') {
-        return res.status(400).send({ message: 'Пароль должен быть миниму 8 символов' });
+        throw new ConflictError('Такой пользователь уже существует');
       }
 
-      return res.status(500).send({ message: err.name });
-    });
+      next(err);
+    })
+    .catch(next);
 };
 
-module.exports.getUser = (req, res) => {
+module.exports.getUser = (req, res, next) => {
   User.findById(req.params.id)
-    .orFail(new Error('nullId'))
+    .orFail(() => {
+      throw new NotFoundError('не найден пользователь с таким id');
+    })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.message === 'nullId') {
-        return res.status(404).send({ message: 'не найден пользователь с таким id' });
-      }
       if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'не валидный id' });
+        throw new NotRequestError('Не валидный id');
       }
 
-      return res.status(500).send({ message: 'На сервере произошла ошибка' });
-    });
+      next(err);
+    })
+    .catch(next);
 };
 
-module.exports.updatetUser = (req, res) => {
+module.exports.updatetUser = (req, res, next) => {
   const { name, about } = req.body;
 
   User.findByIdAndUpdate(req.user._id, { name, about })
-    .orFail(new Error('nullId'))
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      if (user === null) {
+        throw new NotFoundError('не найден пользователь с таким id');
+      }
+      res.send({ data: user });
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(400).send({ message: 'Переданы некорректные данные' });
+        throw new NotRequestError('Переданы некорректные данные');
       }
-      if (err.message === 'nullId') {
-        return res.status(404).send({ message: 'нет такого пользователя' });
-      }
-      return res.status(500).send({ message: 'На сервере произошла ошибка' });
-    });
+      next(err);
+    })
+    .catch(next);
 };
 
-module.exports.updatetAvatar = (req, res) => {
+module.exports.updatetAvatar = (req, res, next) => {
   const { avatar } = req.body;
 
   User.findByIdAndUpdate(req.user._id, { avatar })
-    .orFail(new Error('nullId'))
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      if (user === null) {
+        throw new NotFoundError('не найден пользователь с таким id');
+      }
+      res.send({ data: user });
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(400).send({ message: 'Переданы некорректные данные' });
+        throw new NotRequestError('Переданы некорректные данные');
       }
-      if (err.message === 'nullId') {
-        return res.status(404).send({ message: 'Нет такого пользователя' });
-      }
-      return res.status(500).send({ message: 'На сервере произошла ошибка' });
-    });
+      next(err);
+    })
+    .catch(next);
 };
