@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const { login, createUser } = require('./controllers/user');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
+const NotFoundError = require('./errors/not-found-err');
 
 const app = express();
 
@@ -55,6 +56,10 @@ app.use(errorLogger);
 
 app.use(errors());
 
+app.use('*', () => {
+  throw new NotFoundError('Запрашиваемый ресурс не найден');
+});
+
 app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err;
   res
@@ -67,5 +72,3 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT);
-
-app.use('/', (req, res) => res.status(404).send({ message: 'Запрашиваемый ресурс не найден' }));
