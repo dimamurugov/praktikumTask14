@@ -103,10 +103,10 @@ module.exports.updatetUser = (req, res, next) => {
   const { name, about } = req.body;
 
   User.findByIdAndUpdate(req.user._id, { name, about })
+    .orFail(() => {
+      throw new NotFoundError('не найден пользователь с таким id');
+    })
     .then((user) => {
-      if (user === null) {
-        throw new NotFoundError('не найден пользователь с таким id');
-      }
       res.send({ data: user });
     })
     .catch((err) => {
@@ -122,10 +122,10 @@ module.exports.updatetAvatar = (req, res, next) => {
   const { avatar } = req.body;
 
   User.findByIdAndUpdate(req.user._id, { avatar })
+    .orFail(() => {
+      throw new NotFoundError('не найден пользователь с таким id');
+    })
     .then((user) => {
-      if (user === null) {
-        throw new NotFoundError('не найден пользователь с таким id');
-      }
       res.send({ data: user });
     })
     .catch((err) => {
