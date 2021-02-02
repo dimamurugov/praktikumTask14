@@ -8,15 +8,10 @@ const NotFoundError = require('./errors/not-found-err');
 const { login, createUser } = require('./controllers/user');
 
 const corsOptions = {
-  origin: [
-    '*',
-    'http://localhost:8080',
-    'http://84.252.131.237',
-  ],
+  origin: '*',
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
   preflightContinue: false,
   optionsSuccessStatus: 204,
-  'Access-Control-Allow-Credentials': true,
   allowedHeaders: [
     'Content-Type',
     'origin',
