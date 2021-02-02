@@ -1,69 +1,59 @@
 /* eslint-disable no-unused-vars */
 const { errors } = require('celebrate');
-const { celebrate, Joi } = require('celebrate');
 require('dotenv').config();
 const express = require('express');
-const mongoose = require('mongoose');
+const cors = require('cors');
 const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-});
-const { login, createUser } = require('./controllers/user');
-const { requestLogger, errorLogger } = require('./middlewares/logger');
 const NotFoundError = require('./errors/not-found-err');
+const { login, createUser } = require('./controllers/user');
+
+const corsOptions = {
+  origin: [
+    'http://localhost:8080',
+    'http://84.252.131.237',
+  ],
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+  allowedHeaders: [
+    'Content-Type',
+    'origin',
+    'Authorization',
+    'x-access-token',
+    'accept',
+  ],
+  credentials: true,
+};
+
+const users = [
+  { name: 'Дима', age: 22 },
+  { name: 'Виктор', age: 30 },
+  { name: 'Анастасия', age: 48 },
+  { name: 'Алексей', age: 121 },
+];
 
 const app = express();
-
-app.use(requestLogger);
-
-app.use(cookieParser());
 const { PORT = 3000 } = process.env;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(helmet());
-app.use(limiter);
 
-mongoose.connect('mongodb://localhost:27017/mestodb', {
-  useNewUrlParser: true,
-  useCreateIndex: true,
-  useFindAndModify: false,
-  useUnifiedTopology: true,
-});
-
-app.get('/crash-test', () => {
-  setTimeout(() => {
-    throw new Error('Сервер сейчас упадёт');
-  }, 0);
-});
-
-app.post('/signin', celebrate({
-  body: Joi.object().keys({
-    email: Joi.string().required().pattern(/([\w-]\.?)+@([\w-]\.?)+\.\w{2,}/),
-    password: Joi.string().required().min(8).max(30),
-  }),
-}), login);
-app.post('/signup', celebrate({
-  body: Joi.object().keys({
-    name: Joi.string().required().min(2).max(30),
-    about: Joi.string().required().min(2).max(30),
-    avatar: Joi.string().required().pattern(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/),
-    email: Joi.string().required().pattern(/([\w-]\.?)+@([\w-]\.?)+\.\w{2,}/),
-    password: Joi.string().required().min(8).max(30),
-  }),
-}), createUser);
-
-app.use('/users', require('./routes/user'));
-app.use('/cards', require('./routes/card'));
-
-app.use(errorLogger);
+app.use('*', cors(corsOptions));
 
 app.use(errors());
+app.get('/', (req, res) => {
+  res.status(200).send({message: " GET '/users' - получить данные, POST '/users' - изминить данные " });
+});
+
+app.get('/users', (req, res) => {
+  res.status(200).send({message: 'Запрос GET, Получай информацию!', data: users });
+});
+
+app.post('/users', (req, res) => {
+  const data = req.body;
+  users.push({ name: data.name, age: data.age });
+  res.status(200).send({ message: `Создал нового человека ${data.name} и ему ${data.age}`, users });
+});
 
 app.use('*', () => {
   throw new NotFoundError('Запрашиваемый ресурс не найден');
